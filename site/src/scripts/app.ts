@@ -171,7 +171,7 @@ $("[data-theme-toggle]").addEventListener("click", () => {
 
 // ---------- rail scroll-spy ----------
 const railLinks = $$<HTMLAnchorElement>(".rail a");
-const narrow = window.matchMedia("(max-width: 860px)");
+const narrow = window.matchMedia("(max-width: 980px)");
 const stepEls = $$(".step");
 let spyFrame = 0, currentStep = "";
 function spy() {
