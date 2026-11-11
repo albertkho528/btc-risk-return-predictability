@@ -249,27 +249,54 @@ function example(key: string, i: number): string {
   return "";
 }
 
-// Explanation panels: click a line to show its explanation; on narrow screens the panel moves under the line.
+// Notebook viewers: cell tabs, and click a line to explain it. On narrow screens the
+// explanation opens under the cell's code instead of beside it.
 $$(".nb").forEach((nb) => {
   const panel = $(".nb-explain", nb);
   const home = nb;
   const lines = $$<HTMLButtonElement>("button.line", nb);
-  const show = (b: HTMLButtonElement) => {
+  const tabs = $$<HTMLButtonElement>('[role="tab"]', nb);
+  const show = (b: HTMLButtonElement, reveal = false) => {
     lines.forEach((l) => l.setAttribute("aria-pressed", String(l === b)));
     $("[data-ex-cell]", panel).textContent = b.dataset.cell!;
     $("[data-ex-line]", panel).textContent = b.dataset.line!;
-    $("[data-ex-src]", panel).textContent = b.dataset.src!.trim();
+    $("[data-ex-src]", panel).textContent = b.dataset.src!.trim().replace(/\s{2,}#/, "  #");
     $("[data-ex-text]", panel).textContent = b.dataset.e!;
     const ex = $("[data-ex-example]", panel);
     ex.dataset.exKey = b.dataset.ex ?? "";
     ex.innerHTML = b.dataset.ex ? example(b.dataset.ex, state.day) : "";
-    if (narrow.matches) b.after(panel);
-    else if (panel.parentElement !== home) home.append(panel);
+    if (narrow.matches) {
+      b.closest(".cell-scroll")!.after(panel);
+      if (reveal) panel.scrollIntoView({ block: "nearest", behavior: "instant" as ScrollBehavior });
+    } else if (panel.parentElement !== home) home.append(panel);
   };
-  lines.forEach((b) => b.addEventListener("click", () => show(b)));
-  narrow.addEventListener("change", () => {
-    if (!narrow.matches && panel.parentElement !== home) home.append(panel);
+  const openTab = (t: HTMLButtonElement, focus = false) => {
+    tabs.forEach((x) => {
+      const on = x === t;
+      x.setAttribute("aria-selected", String(on));
+      x.tabIndex = on ? 0 : -1;
+      ($(`#${x.getAttribute("aria-controls")}`) as HTMLElement).hidden = !on;
+    });
+    if (focus) t.focus();
+    t.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" as ScrollBehavior });
+    const firstLine = $<HTMLButtonElement>("button.line", $(`#${t.getAttribute("aria-controls")}`));
+    if (firstLine) show(firstLine);
+  };
+  tabs.forEach((t, k) => {
+    t.addEventListener("click", () => openTab(t));
+    t.addEventListener("keydown", (e) => {
+      const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      openTab(tabs[(k + d + tabs.length) % tabs.length], true);
+    });
   });
+  lines.forEach((b) => b.addEventListener("click", () => show(b, true)));
+  narrow.addEventListener("change", () => {
+    const sel = lines.find((l) => l.getAttribute("aria-pressed") === "true");
+    if (sel) show(sel);
+  });
+  if (narrow.matches) { const sel = lines.find((l) => l.getAttribute("aria-pressed") === "true"); if (sel) show(sel); }
 });
 onDay(() => $$("[data-ex-example]").forEach((ex) => (ex.innerHTML = ex.dataset.exKey ? example(ex.dataset.exKey, state.day) : "")));
 
@@ -513,3 +540,12 @@ window.addEventListener("resize", () => {
 });
 
 setDay(state.day);
+
+// The charts are drawn by this script, so a link like /#step-7 lands too high when the
+// browser jumps before they exist. Jump again once everything is drawn.
+function jumpToHash() {
+  const el = location.hash ? document.getElementById(location.hash.slice(1)) : null;
+  if (el) el.scrollIntoView({ block: "start", behavior: "instant" as ScrollBehavior });
+}
+requestAnimationFrame(jumpToHash);
+window.addEventListener("load", jumpToHash, { once: true });

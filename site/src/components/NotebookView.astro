@@ -3,6 +3,8 @@ import notebooks from "../data/notebooks.json";
 import { explanations } from "../data/explanations";
 import { tokenize } from "../lib/highlight";
 
+// One notebook shown like an editor: a tab per cell, one cell visible at a time,
+// and an explanation panel for the selected line.
 interface Props { nb: string; cells: number[]; step: number; first: [number, number] }
 const { nb, cells, step, first } = Astro.props;
 const book = notebooks.find((b) => b.id === nb)!;
@@ -10,35 +12,56 @@ const shown = book.cells.filter((c) => cells.includes(c.n));
 const firstKey = `${nb}:${first[0]}:${first[1]}`;
 const firstSrc = book.cells.find((c) => c.n === first[0])!.lines[first[1] - 1];
 const firstEx = explanations[firstKey];
+const id = (n: number) => `s${step}-c${n}`;
 ---
 <div class="nb" data-nb-step={step}>
   <div class="nb-code">
-    <p class="hint">Notebook {nb}.ipynb, cells {cells[0]}–{cells[cells.length - 1]}. Click any line to see what it does.</p>
+    <div class="nb-bar">
+      <p class="nb-file">notebooks/{nb}.ipynb</p>
+      <div class="nb-tabs" role="tablist" aria-label={`Cells of ${nb}.ipynb`}>
+        {shown.map((cell) => (
+          <button
+            type="button"
+            role="tab"
+            id={`${id(cell.n)}-tab`}
+            aria-controls={id(cell.n)}
+            aria-selected={cell.n === first[0] ? "true" : "false"}
+            tabindex={cell.n === first[0] ? 0 : -1}
+            data-tab={cell.n}
+          >In [{cell.n}]</button>
+        ))}
+      </div>
+    </div>
+    <p class="hint">Click any line to see what it does. The tabs above hold the other cells of this step.</p>
     {shown.map((cell) => (
-      <>
-        <p class="cell-label">In [{cell.n}]:</p>
-        {cell.lines.map((line, i) => {
-          const key = `${nb}:${cell.n}:${i + 1}`;
-          const ex = explanations[key];
-          return line.trim() === "" ? (
-            <div class="line blank" aria-hidden="true"><span class="ln">{i + 1}</span><span class="src"> </span></div>
-          ) : (
-            <button
-              type="button"
-              class="line"
-              aria-pressed={key === firstKey ? "true" : "false"}
-              aria-label={`Explain cell ${cell.n}, line ${i + 1}`}
-              data-cell={cell.n}
-              data-line={i + 1}
-              data-e={ex?.e ?? ""}
-              data-ex={ex?.ex ?? ""}
-              data-src={line}
-            >
-              <span class="ln">{i + 1}</span>
-              <span class="src">{tokenize(line).map((t) => (t.c ? <span class={t.c}>{t.t}</span> : t.t))}</span>
-            </button>
-          );
-        })}
+      <div class="cell" id={id(cell.n)} role="tabpanel" aria-labelledby={`${id(cell.n)}-tab`} hidden={cell.n !== first[0]}>
+        <div class="cell-scroll">
+          <div class="cell-lines">
+            {cell.lines.map((line, i) => {
+              const key = `${nb}:${cell.n}:${i + 1}`;
+              const ex = explanations[key];
+              return line.trim() === "" ? (
+                <div class="line blank" aria-hidden="true"><span class="ln">{i + 1}</span><span class="src"> </span></div>
+              ) : (
+                <button
+                  type="button"
+                  class="line"
+                  aria-pressed={key === firstKey ? "true" : "false"}
+                  aria-label={`Explain cell ${cell.n}, line ${i + 1}`}
+                  data-cell={cell.n}
+                  data-line={i + 1}
+                  data-e={ex?.e ?? ""}
+                  data-ex={ex?.ex ?? ""}
+                  data-src={line}
+                >
+                  <span class="ln">{i + 1}</span>
+                  <span class="src">{tokenize(line).map((t) => (t.c ? <span class={t.c}>{t.t}</span> : t.t))}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {cell.outputs.length > 0 && <p class="out-label">Output</p>}
         {cell.outputs.map((o) =>
           o.kind === "image" ? (
             <div class="out-img"><img src={o.src} alt={`Chart output of ${nb} cell ${cell.n}`} loading="lazy" decoding="async" /></div>
@@ -46,13 +69,13 @@ const firstEx = explanations[firstKey];
             <pre class:list={["out", { err: o.kind === "error" }]}>{o.text}</pre>
           )
         )}
-      </>
+      </div>
     ))}
   </div>
   <div class="nb-explain">
     <div class="sticky" aria-live="polite">
       <p class="where">Cell <span data-ex-cell>{first[0]}</span>, line <span data-ex-line>{first[1]}</span></p>
-      <pre data-ex-src>{firstSrc.trim()}</pre>
+      <pre data-ex-src>{firstSrc.trim().replace(/\s{2,}#/, "  #")}</pre>
       <p class="text" data-ex-text>{firstEx?.e}</p>
       <div class="example" data-ex-example data-ex-key={firstEx?.ex ?? ""}></div>
     </div>

@@ -196,30 +196,44 @@ table.data td:first-child { font-family: var(--font-text); font-size: 15px; }
 .two > * { flex: 1 1 260px; min-width: 0; }
 .panel { background: var(--bg); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
 
-/* ---------- notebook viewer ---------- */
+/* ---------- notebook viewer: an editor window, one cell per tab ---------- */
 .nb { display: flex; flex-wrap: wrap; border-top: 1px solid var(--line2); }
-.nb-code { flex: 1 1 460px; min-width: 0; background: var(--code-bg); padding: 14px 0 18px; }
-.nb-code .hint { margin: 0 20px 6px; font-size: 13px; color: #b7c1d1; }
-.cell-label { margin: 12px 20px 4px; font-family: var(--font-code); font-size: 13px; color: #9aa6b8; }
+.nb-code { flex: 3 1 480px; min-width: 0; background: var(--code-bg); display: flex; flex-direction: column; }
+.nb-bar { background: #252526; display: flex; flex-direction: column; }
+.nb-file { padding: 10px 16px 6px; font-family: var(--font-code); font-size: 13px; color: #cccccc; }
+.nb-tabs { display: flex; overflow-x: auto; scrollbar-width: thin; }
+.nb-tabs button {
+  flex: none; border: 0; border-top: 2px solid transparent; background: #2d2d2d; color: #9d9d9d;
+  font-family: var(--font-code); font-size: 13px; padding: 0 16px; min-height: 40px; cursor: pointer;
+}
+.nb-tabs button + button { border-left: 1px solid #252526; }
+.nb-tabs button:hover { color: #ffffff; }
+.nb-tabs button[aria-selected="true"] { background: var(--code-bg); color: #ffffff; border-top-color: #ee9466; }
+.nb-code .hint { margin: 12px 18px 4px; font-size: 13px; color: #b7c1d1; }
+.cell { padding: 4px 0 18px; }
+.cell[hidden] { display: none; }
+.cell-scroll { overflow-x: auto; scrollbar-width: thin; }
+.cell-lines { display: inline-block; min-width: 100%; vertical-align: top; }
 .line {
   display: flex; align-items: flex-start; width: 100%; text-align: left; border: 0; cursor: pointer;
-  background: transparent; color: var(--code-ink); font-family: var(--font-code); font-size: 14px; line-height: 1.55;
-  padding: 4px 16px 4px 4px; min-height: 30px; border-left: 3px solid transparent; white-space: pre-wrap; overflow-wrap: anywhere;
+  background: transparent; color: var(--code-ink); font-family: var(--font-code); font-size: 13.5px; line-height: 1.6;
+  padding: 3px 20px 3px 4px; min-height: 30px; border-left: 3px solid transparent; white-space: pre;
 }
 .line:hover { background: #2a2d2e; }
 .line[aria-pressed="true"] { background: var(--code-sel); border-left-color: #ee9466; }
 .line .ln { flex: none; width: 34px; padding-right: 14px; text-align: right; color: var(--code-gutter); user-select: none; }
-.line .src { flex: 1; min-width: 0; }
+.line .src { flex: none; }
 .line.blank { cursor: default; min-height: 20px; }
 .line.blank:hover { background: transparent; }
+.out-label { margin: 14px 18px 4px; font-size: 12px; color: #9aa6b8; }
 .out {
-  margin: 4px 20px 8px 42px; padding: 8px 12px; border-left: 2px solid #3a4866; font-family: var(--font-code);
-  font-size: 13px; color: #c8d0dc; white-space: pre-wrap; overflow-x: auto;
+  margin: 0 18px 8px; padding: 10px 14px; background: #181818; border-radius: 6px; font-family: var(--font-code);
+  font-size: 13px; line-height: 1.5; color: #c8d0dc; white-space: pre; overflow: auto; max-height: 240px; scrollbar-width: thin;
 }
 .out.err { color: #f48771; }
-.out-img { margin: 6px 20px 10px 42px; background: #ffffff; border-radius: 6px; padding: 6px; }
-.out-img img { display: block; max-width: 100%; height: auto; }
-.nb-explain { flex: 1 1 320px; min-width: 0; padding: 22px 26px; display: flex; flex-direction: column; gap: 12px; }
+.out-img { margin: 0 18px 10px; background: #ffffff; border-radius: 6px; padding: 6px; }
+.out-img img { display: block; max-width: 100%; max-height: 340px; width: auto; height: auto; margin: 0 auto; }
+.nb-explain { flex: 1 1 260px; min-width: 0; padding: 22px 26px; display: flex; flex-direction: column; gap: 12px; }
 .nb-explain .sticky { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 12px; }
 .nb-explain .where { font-size: 14px; color: var(--muted); }
 .nb-explain pre {
@@ -230,7 +244,7 @@ table.data td:first-child { font-family: var(--font-text); font-size: 15px; }
 .example { border-top: 1px solid var(--line2); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 .example:empty { display: none; }
 /* On narrow screens the explanation opens directly under the clicked line */
-.nb-code .nb-explain { background: var(--surface); color: var(--ink); margin: 6px 12px 12px; border-radius: 10px; padding: 16px 18px; }
+.nb-code .nb-explain { background: var(--surface); color: var(--ink); margin: 8px 12px 4px; border-radius: 10px; padding: 16px 18px; }
 .nb-code .nb-explain .sticky { position: static; }
 .example .k { font-size: 14px; color: var(--muted); }
 
