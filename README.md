@@ -14,6 +14,10 @@ Bitcoin's risk can be forecast but its direction cannot, and in the 2024 to 2025
 
 ![Growth of $1 in three strategies](outputs/figures/fig4_growth.png)
 
+## Code explorer website
+
+`site/` is an interactive website that walks through every line of the five notebooks. Pick a day on the price chart and each step shows that day's calculation next to the code that produced it; sliders rerun the volatility forecasts and the backtest in the browser. See [`site/README.md`](site/README.md) to run or deploy it.
+
 ## Design
 
 - **Sample split:** training 2018 to 2021, validation 2022 to 2023, test 2024 to 2025. All settings (such as the EWMA λ = 0.97) were chosen on the validation years and frozen before the test years were run once.

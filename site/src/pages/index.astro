@@ -1,0 +1,278 @@
+---
+import Base from "../layouts/Base.astro";
+import NotebookView from "../components/NotebookView.astro";
+
+const repo = "https://github.com/albertkho528/btc-risk-return-predictability";
+const steps = [
+  { id: "step-1", short: "Prices and returns" },
+  { id: "step-2", short: "Risk statistics" },
+  { id: "step-3", short: "Momentum signal" },
+  { id: "step-4", short: "Out-of-sample test" },
+  { id: "step-5", short: "Volatility forecasts" },
+  { id: "step-6", short: "Strategy backtest" },
+  { id: "step-7", short: "Robustness" },
+];
+const presets = [
+  { iso: "2020-03-12", label: "COVID crash, 12 Mar 2020" },
+  { iso: "2022-11-09", label: "FTX collapse, 9 Nov 2022" },
+  { iso: "2025-10-10", label: "Liquidation sell-off, 10 Oct 2025" },
+];
+---
+<Base
+  title="Bitcoin risk and return, line by line"
+  description="Every number in Albert Kho's Bitcoin predictability study, recomputed in the browser next to the notebook code that produced it."
+>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="#top">Bitcoin risk and return, line by line</a>
+      <nav class="header-links" aria-label="Project links">
+        <a href={repo}>GitHub repository</a>
+        <a href={`${repo}/tree/main/notebooks`}>Notebooks</a>
+        <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch colour theme">
+          <span class="when-light" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          </span>
+          <span class="when-light">Dark theme</span>
+          <span class="when-dark" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          </span>
+          <span class="when-dark">Light theme</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrap" id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <h1>How every number in the study was produced</h1>
+        <p>Pick a day on the price chart. Each step below then works through that day's calculation, next to the notebook code that does it. Click any line of code to see what it does.</p>
+        <p class="note">Risk and Return Predictability in Bitcoin: an out-of-sample study of momentum and volatility models. Albert Kho (许智荐), Central University of Finance and Economics.</p>
+      </div>
+      <div class="card hero-chart">
+        <div class="chart-head">
+          <p>Bitcoin price in US dollars, log scale</p>
+          <p class="note">Click or drag on the chart to pick a day</p>
+        </div>
+        <div class="price-plot" id="price-plot" role="img" aria-label="Bitcoin price from September 2017 to December 2025, log scale, with the selected day marked"></div>
+        <div class="day-controls">
+          {presets.map((p) => (
+            <button type="button" class="chip" data-day={p.iso} aria-pressed="false">{p.label}</button>
+          ))}
+          <label class="date-field">Or any day
+            <input type="date" id="day-input" min="2018-01-01" max="2025-12-30" value="2022-11-09" />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <nav class="rail" aria-label="Pipeline steps">
+        <div class="rail-day">
+          <p>Selected day</p>
+          <p data-day-label>9 Nov 2022</p>
+        </div>
+        <p class="rail-title">Pipeline</p>
+        {steps.map((s, k) => (
+          <a href={`#${s.id}`} aria-current={k === 0 ? "true" : "false"}><span class="n">{k + 1}</span>{s.short}</a>
+        ))}
+      </nav>
+
+      <main>
+        <!-- 1 -->
+        <section class="card step" id="step-1" aria-labelledby="h-1">
+          <div class="step-head">
+            <p class="where">Step 1 of 7, notebook 01_data</p>
+            <h2 id="h-1">Prices and daily returns</h2>
+            <p class="lead">Load 3,044 daily Bitcoin prices from Coin Metrics and turn them into daily returns. Every later number starts from this one column.</p>
+          </div>
+          <div class="demo">
+            <p class="demo-title">The return on the selected day</p>
+            <p class="calc" data-out="s1-calc"></p>
+            <div class="stat-grid" data-out="s1-stats"></div>
+          </div>
+          <NotebookView nb="01_data" cells={[1, 2, 3, 4]} step={1} first={[3, 1]} />
+        </section>
+
+        <!-- 2 -->
+        <section class="card step" id="step-2" aria-labelledby="h-2">
+          <div class="step-head">
+            <p class="where">Step 2 of 7, notebook 02_stats</p>
+            <h2 id="h-2">Risk statistics</h2>
+            <p class="lead">Grow 1 USD with the daily returns, measure how far it fell from its peak, and summarise the risk: volatility, drawdown, value at risk and fat tails.</p>
+          </div>
+          <div class="demo">
+            <div class="controls">
+              <div class="seg" role="group" aria-label="Period for the statistics" data-seg="period">
+                <button type="button" data-v="2018,2025" aria-pressed="true">2018 to 2025</button>
+                <button type="button" data-v="2018,2021" aria-pressed="false">Training 2018–21</button>
+                <button type="button" data-v="2022,2023" aria-pressed="false">Validation 2022–23</button>
+                <button type="button" data-v="2024,2025" aria-pressed="false">Test 2024–25</button>
+              </div>
+            </div>
+            <div class="stat-grid" data-out="s2-stats"></div>
+            <p class="note">Recomputed in your browser. For 2018 to 2025 these match the notebook output exactly.</p>
+          </div>
+          <div class="demo">
+            <p class="demo-title">Drawdown: how far 1 USD is below its highest value so far</p>
+            <div class="plot" data-plot="dd"></div>
+            <p class="sentence" data-out="s2-calc"></p>
+            <p class="sentence" data-out="s2-rf"></p>
+          </div>
+          <NotebookView nb="02_stats" cells={[1, 2, 3, 4]} step={2} first={[2, 2]} />
+        </section>
+
+        <!-- 3 -->
+        <section class="card step" id="step-3" aria-labelledby="h-3">
+          <div class="step-head">
+            <p class="where">Step 3 of 7, notebook 03_momentum, cells 1–2</p>
+            <h2 id="h-3">Momentum signal, lined up with tomorrow</h2>
+            <p class="lead">Today's 30-day momentum and volatility are used to predict tomorrow's return. The shift(-1) is what keeps the test honest: drop it and the regression looks brilliant.</p>
+          </div>
+          <div class="demo">
+            <p class="demo-title">One row of the regression table, for the selected day</p>
+            <div class="table-wrap"><table class="data" data-out="s3-row"></table></div>
+          </div>
+          <div class="demo">
+            <div class="controls">
+              <div class="seg" role="group" aria-label="Which return to predict" data-seg="align">
+                <button type="button" data-v="aligned" aria-pressed="true">Tomorrow's return, shift(-1)</button>
+                <button type="button" data-v="lookahead" aria-pressed="false">Today's return, the mistake</button>
+              </div>
+            </div>
+            <div class="two">
+              <div class="panel">
+                <p class="note">Momentum t-statistic (HAC, 30 lags)</p>
+                <p class="big" data-out="s3-t"></p>
+                <p class="note" data-out="s3-r2"></p>
+                <p data-out="s3-msg"></p>
+              </div>
+              <div class="plot" data-plot="scatter"></div>
+            </div>
+            <p class="note">Training years 2018–2021, 1,461 days; the scatter shows every third day.</p>
+          </div>
+          <NotebookView nb="03_momentum" cells={[1, 2]} step={3} first={[1, 9]} />
+        </section>
+
+        <!-- 4 -->
+        <section class="card step" id="step-4" aria-labelledby="h-4">
+          <div class="step-head">
+            <p class="where">Step 4 of 7, notebook 03_momentum, cells 3–5</p>
+            <h2 id="h-4">Out-of-sample test</h2>
+            <p class="lead">From 2022 on, refit the model every day using only the past, forecast tomorrow, and compare with a plain benchmark: the average return so far. R² out of sample above 0 means momentum beat the benchmark.</p>
+          </div>
+          <div class="demo">
+            <p class="demo-title">The forecast made on the selected day</p>
+            <p class="sentence" data-out="s4-calc"></p>
+          </div>
+          <div class="demo">
+            <p class="demo-title">R² out of sample, adding one day at a time from 1 Jan 2022</p>
+            <div class="plot" data-plot="r2"></div>
+            <div class="two">
+              <div class="panel"><p class="note">Validation 2022–23</p><p class="big">0.009%</p><p class="note">Clark–West t = 0.42</p></div>
+              <div class="panel"><p class="note">Test 2024–25</p><p class="big">−0.017%</p><p class="note">Clark–West t = 0.19</p></div>
+            </div>
+            <p class="note">Both are close to zero and the t-values are far below 1.65, so momentum does not predict Bitcoin's daily return.</p>
+          </div>
+          <NotebookView nb="03_momentum" cells={[3, 4, 5]} step={4} first={[3, 4]} />
+        </section>
+
+        <!-- 5 -->
+        <section class="card step" id="step-5" aria-labelledby="h-5">
+          <div class="step-head">
+            <p class="where">Step 5 of 7, notebook 04_volatility</p>
+            <h2 id="h-5">Volatility forecasts</h2>
+            <p class="lead">Two ways to forecast tomorrow's risk: the average of the last 30 squared returns, or EWMA, which keeps most of yesterday's estimate and mixes in today's news. QLIKE scores each forecast; lower is better.</p>
+          </div>
+          <div class="demo">
+            <div class="controls">
+              <div class="control">
+                <label for="lam">EWMA λ (how much of yesterday's estimate to keep): <output id="lam-out">0.97</output></label>
+                <input type="range" id="lam" min="0.80" max="0.99" step="0.01" value="0.97" />
+              </div>
+            </div>
+            <p class="demo-title">Forecast volatility around the FTX collapse, annualised</p>
+            <div class="plot" data-plot="ftx"></div>
+            <div class="legend"><span><i style="background: var(--rust)"></i>30-day rolling</span><span><i style="background: var(--blue)"></i>EWMA, λ = <span data-out="lam-legend">0.97</span></span></div>
+            <div class="table-wrap"><table class="data" data-out="s5-qlike"></table></div>
+            <p class="note">The notebook chose λ = 0.97 on the validation years, then tested it once on 2024–25: Diebold–Mariano t = 2.45, so EWMA is the better forecast.</p>
+          </div>
+          <div class="demo">
+            <p class="demo-title">The EWMA update on the selected day</p>
+            <p class="sentence" data-out="s5-calc"></p>
+          </div>
+          <NotebookView nb="04_volatility" cells={[1, 2, 3, 4, 5]} step={5} first={[2, 7]} />
+        </section>
+
+        <!-- 6 -->
+        <section class="card step" id="step-6" aria-labelledby="h-6">
+          <div class="step-head">
+            <p class="where">Step 6 of 7, notebook 05_strategy, cells 1–6</p>
+            <h2 id="h-6">Strategy backtest</h2>
+            <p class="lead">Volatility targeting holds 30% ÷ forecast volatility in Bitcoin, at most 100%, and the rest in T-bills. It is compared with buy-and-hold and with a fixed 39.1% mix, after trading costs.</p>
+          </div>
+          <div class="demo">
+            <p class="demo-title">Volatility targeting on the selected day</p>
+            <div class="table-wrap"><table class="data" data-out="s6-day"></table></div>
+          </div>
+          <div class="demo">
+            <div class="controls">
+              <div class="control">
+                <label for="target">Volatility target: <output id="target-out">30%</output></label>
+                <input type="range" id="target" min="0.15" max="0.60" step="0.05" value="0.30" />
+              </div>
+              <div class="control">
+                <label for="cost">Trading cost per unit traded: <output id="cost-out">25 bp</output></label>
+                <input type="range" id="cost" min="0" max="100" step="5" value="25" />
+              </div>
+              <button type="button" class="btn" data-reset>Reset to notebook settings</button>
+            </div>
+            <p class="demo-title">Test years 2024–25</p>
+            <div class="table-wrap"><table class="data" data-out="s6-metrics"></table></div>
+            <p class="demo-title">Growth of 1 USD, 2024–25, log scale</p>
+            <div class="plot" data-plot="growth"></div>
+            <div class="legend">
+              <span><i style="background: var(--muted)"></i>Buy and hold</span>
+              <span><i style="background: var(--rust)"></i>Fixed mix</span>
+              <span><i style="background: var(--blue)"></i>Volatility target</span>
+            </div>
+            <p class="note">1 bp is 0.01%: 25 bp means paying 0.25% of whatever is traded.</p>
+          </div>
+          <NotebookView nb="05_strategy" cells={[1, 2, 3, 4, 5, 6]} step={6} first={[3, 6]} />
+        </section>
+
+        <!-- 7 -->
+        <section class="card step" id="step-7" aria-labelledby="h-7">
+          <div class="step-head">
+            <p class="where">Step 7 of 7, notebook 05_strategy, cells 7–9</p>
+            <h2 id="h-7">Robustness</h2>
+            <p class="lead">Is the gap between volatility targeting and the fixed mix real, or luck? Check other settings, each year on its own, and a block bootstrap of the Sharpe difference.</p>
+          </div>
+          <div class="demo">
+            <p class="demo-title">Sharpe ratio by year (25 bp costs)</p>
+            <div class="table-wrap"><table class="data" data-out="s7-years"></table></div>
+          </div>
+          <div class="demo">
+            <p class="demo-title">Block bootstrap: 5,000 reshuffled histories of 2024–25 in 20-day blocks</p>
+            <div class="controls"><button type="button" class="btn" data-boot>Run 5,000 resamples</button><p class="note" data-out="s7-status" aria-live="polite"></p></div>
+            <div class="plot" data-plot="boot"></div>
+            <p data-out="s7-msg"></p>
+            <p class="note">Your browser's random numbers differ from NumPy's, so the interval can differ from the notebook's [−0.30, 0.10] in the second decimal.</p>
+          </div>
+          <NotebookView nb="05_strategy" cells={[7, 8, 9]} step={7} first={[9, 7]} />
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Albert Kho (许智荐). Data: Coin Metrics prices, FRED 3-month T-bill rate (DTB3).</p>
+      <p>Code and data: <a href={repo}>albertkho528/btc-risk-return-predictability</a></p>
+    </div>
+  </footer>
+
+  <script>
+    import "../scripts/app.ts";
+  </script>
+</Base>
